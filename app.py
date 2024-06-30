@@ -22,7 +22,7 @@ from IPython.display import display
 from IPython.display import Markdown
 import textwrap
 
-GOOGLE_API_KEY='AIzaSyDbB0NWL8VYI688EIRUAIPmzFtjcvsYThI'
+GOOGLE_API_KEY='API KEY HERE'
 genai.configure(api_key=GOOGLE_API_KEY)
 llm_model = genai.GenerativeModel('gemini-1.5-flash')
 
@@ -241,9 +241,6 @@ def getresume():
 
 
         
-
-
-
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)
