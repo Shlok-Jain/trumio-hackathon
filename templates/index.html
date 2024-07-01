@@ -14,6 +14,10 @@
         event.preventDefault();
         var job_description = document.getElementById('floatingTextarea').value;
         var method = document.getElementById('select').value;
+        if(job_description == ''){
+            alert('Please enter the Project description');
+            return;
+        }
         await fetch('/recommend', {
             method: 'POST',
             headers: {
@@ -37,6 +41,12 @@
           });
         })
     }
+    function selectchange(e){
+      // console.log(e.target.value);
+      if(e.target.value == 'llm'){
+        alert('This method will take 3-4 minutes tu run after clicking submit, because free tier has 15 requests per minute limit. Please be patient.')
+      }
+    }
 </script>
 
 <body>
@@ -56,12 +66,12 @@
         </div>
       </nav>
       <div class="container">
-        <p class="h4 mt-5">Job description</p>
+        <p class="h4 mt-5">Project description</p>
           <div>
               <textarea name="jd" class="form-control" placeholder="Enter the job description here" id="floatingTextarea"></textarea>
           </div>
         <p class="h4 mt-3">Recommendation Method</p>
-          <select name="methodr" class="form-select" id="select">
+          <select name="methodr" class="form-select" id="select" onchange="selectchange(event)">
             <option value="cs" selected>Cosine similarity</option>
             <option value="lsa">LSA</option>
             <option value="llm">Gemini LLM</option>

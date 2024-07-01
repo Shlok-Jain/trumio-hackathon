@@ -62,7 +62,7 @@ def preprocess_text(text):
     return text
 
 cs_model = Doc2Vec.load('cv_job_maching1.model')
-def cosine_similarity(jd):
+def cosine_similarity1(jd):
     input_JD = preprocess_text(jd)
     similarities = []
     for resume in resumes:
@@ -225,7 +225,7 @@ def getresume():
     jd = data['jd']
     methodr = data['method']
     if methodr == 'cs':
-        result = cosine_similarity(jd)
+        result = cosine_similarity1(jd)
         return flask.jsonify({'top5': result})
         # pass
     elif methodr == 'lsa':
