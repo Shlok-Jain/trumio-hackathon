@@ -21,6 +21,7 @@ import google.generativeai as genai
 from IPython.display import display
 from IPython.display import Markdown
 import textwrap
+import ollama
 
 GOOGLE_API_KEY='API KEY HERE'
 genai.configure(api_key=GOOGLE_API_KEY)
@@ -61,7 +62,7 @@ def preprocess_text(text):
     text = re.sub(r'[^a-zA-Z\s]', '', text)
     return text
 
-cs_model = Doc2Vec.load('cv_job_maching1.model')
+# cs_model = Doc2Vec.load('cv_job_maching1.model')
 def cosine_similarity1(jd):
     input_JD = preprocess_text(jd)
     similarities = []
@@ -159,6 +160,62 @@ def to_markdown(text):
   text = text.replace('•', '  *')
   return Markdown(textwrap.indent(text, '> ', predicate=lambda _: True))
 
+def llama3_approach(project):
+    resumes_df = pd.read_csv('resumes.csv')
+    resume_dict = dict(zip(resumes_df['CANDIDATE_NAME'], resumes_df['RESUME']))
+    candidate_scores = []
+
+    for candidate_name, resume in resume_dict.items():
+        prompt = f"""
+          You are an expert in evaluating resumes for specific projects. Your task is to assess the suitability of a candidate's resume for a given project based on the following criteria:
+          **Skills**: Give the highest importance to skills relevant to the project domain.**Experience**: Consider the candidate's projects, internships, courses, and achievements in competitions, with extra weight if they have worked on similar projects before.
+          **Academic Qualifications**: Give the least importance to academic qualifications, ranks in entrance exams.
+
+          After evaluating the resume based on these criteria, assign a precise, accurate and unique score out of 100 to the candidate based solely on his details in of the resume provided below.
+          A lower score should imply that the candidate doesn't have the required skills for the project whereas a higher score or a score of 100 should imply that the candidate has ample experience and skills in the domain of the project.
+          Here is the candidate's data:
+          Input:
+          Name of the Candidate: {candidate_name}
+          resume: {resume}
+          project: {project}
+
+          Provide the final output in a structured and professional format as shown below:
+          Nothing and nothing else should be in the output.
+          Output Format:
+          Candidate Name: [Name of the candidate]
+          Score: [Score out of 100](should ONLY be a number, no fractions allowed) %
+          Reason: [A brief summary of less than 30 words of the candidate's pros and cons for the project and the reason for the assigned score]
+        """
+
+        # Initialize the Ollama chat with streaming
+        stream = ollama.chat(
+            model='llama2',
+            messages=[{'role': 'user', 'content': prompt}],
+            stream=True,
+        )
+        full_output = ""
+        for chunk in stream:
+            full_output += chunk['message']['content']
+
+        print(full_output) # Comment out this line to hide output.
+
+        # Extracting the score and name
+        name_match = re.search(r"Candidate Name: (.+)", full_output)
+        score_match = re.search(r"Score: (\d+)%", full_output)
+
+        if name_match and score_match:
+            name = name_match.group(1)
+            score = int(score_match.group(1))
+            candidate_scores.append((name, score))
+
+    # Sort candidates by score in descending order
+    candidate_scores.sort(key=lambda x: x[1], reverse=True)
+
+    # Return the top 5 candidates' names and scores
+    top_5_candidates = candidate_scores[:5]
+    top_5_names = [name for name, _ in top_5_candidates]
+    return top_5_names
+
 def gemini(input_pd):
     pd = preprocess_llm(input_pd)
     similarities = []
@@ -204,7 +261,7 @@ def gemini(input_pd):
         similarities.append(pd_match)
 
         
-        time.sleep(60/15)
+        # time.sleep(60/15)
 
     res = (sorted(range(len(similarities)), key=lambda sub: similarities[sub])[-5:])
     res.reverse()
@@ -237,6 +294,9 @@ def getresume():
         return flask.jsonify({'top5': result})
     elif methodr == 'llm':
         result = gemini(jd)
+        return flask.jsonify({'top5': result})
+    elif methodr == 'llama3':
+        result = llama3_approach(jd)
         return flask.jsonify({'top5': result})
 
 

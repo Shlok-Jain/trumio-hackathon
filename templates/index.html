@@ -44,7 +44,7 @@
     function selectchange(e){
       // console.log(e.target.value);
       if(e.target.value == 'llm'){
-        alert('This method will take 3-4 minutes tu run after clicking submit, because free tier has 15 requests per minute limit. Please be patient.')
+        alert('This method will take time to run because there is a limit of 15 response per minute in free API')
       }
     }
 </script>
@@ -73,9 +73,10 @@
         <p class="h4 mt-3">Recommendation Method</p>
           <select name="methodr" class="form-select" id="select" onchange="selectchange(event)">
             <option value="cs" selected>Cosine similarity</option>
-            <option value="lsa">LSA</option>
-            <option value="llm">Gemini LLM</option>
             <option value="keyword">Keyword Matching</option>
+            <option value="llm">Gemini LLM</option>
+            <option value="llama3">Llama3 LLM</option>
+            <option value="lsa">LSA</option>
           </select>
           <button type='submit' onclick="submitf(event)" class="btn btn-success mt-3">Submit</button>
         </div>
