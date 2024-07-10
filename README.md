@@ -34,7 +34,8 @@ python app.py
 ```
 4. Open the link displayed in the terminal.
 
-# Note
+# Important Note
 - You will have to add your Gemini API key in the `app.py line 26` to use the Gemini API method.
+- You should have Ollama installed, and Llama3 model running to use the Llama3 LLM method.
 - The resumes.csv was generated using `generate_csv.ipynb` file, it's code can be found there.
 - The `cv_job_matching1.model` is created using `generate_cosine_model.ipynb`
