@@ -4,7 +4,7 @@ We have created a resume recommendation system that recommends resumes based upo
 1. Doc2Vec model followed by cosine similarity
 2. Using keyword matching
 3. Using Gemini API
-4. LSI matching
+4. LSA matching
 5. Using Llama3 LLM
 
 We have implemented the server backend in flask. And frontend using HTML, CSS and JS.
@@ -36,4 +36,5 @@ python app.py
 
 # Note
 - You will have to add your Gemini API key in the `app.py line 26` to use the Gemini API method.
-- The resumes.csv was generated using generate_csv.ipynb file, it's code can be found there.
+- The resumes.csv was generated using `generate_csv.ipynb` file, it's code can be found there.
+- The `cv_job_matching1.model` is created using `generate_cosine_model.ipynb`

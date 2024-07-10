@@ -62,16 +62,20 @@ def preprocess_text(text):
     text = re.sub(r'[^a-zA-Z\s]', '', text)
     return text
 
+#loading the model
 cs_model = Doc2Vec.load('cv_job_maching1.model')
 def cosine_similarity1(jd):
+    # Pre-processing
     input_JD = preprocess_text(jd)
     similarities = []
     for resume in resumes:
         input_CV = preprocess_text(resume)
-        v1 = cs_model.infer_vector(input_CV.split())
-        v2 = cs_model.infer_vector(input_JD.split())
+        v1 = cs_model.infer_vector(input_CV.split()) #infer vector for resume
+        v2 = cs_model.infer_vector(input_JD.split()) #infer vector for JD
+        # Calculate cosine similarity
         similarity = 100*(np.dot(np.array(v1), np.array(v2))) / (norm(np.array(v1)) * norm(np.array(v2)))
         similarities.append(similarity)
+    #get top 5 matches
     res = (sorted(range(len(similarities)), key = lambda sub: similarities[sub])[-5:])
     res.reverse()
     student_names = []
@@ -89,8 +93,8 @@ def lsi_matching(ps, resumes):
   # Fit the vectorizer to the corpus
   tfidf_matrix = vectorizer.fit_transform(corpus)
 
-  # Apply Truncated SVD for dimensionality reduction (choose an appropriate number of topics)
-  lsa = TruncatedSVD(n_components=50)  # Adjust n_components based on your data
+  # Apply Truncated SVD for dimensionality reduction
+  lsa = TruncatedSVD(n_components=50)
 
   # Transform the TF-IDF matrix
   lsa_matrix = lsa.fit_transform(tfidf_matrix)
@@ -103,7 +107,7 @@ def lsi_matching(ps, resumes):
   for resume_lsa in lsa_matrix[len(ps):]:
     similarity = np.dot(ps_lsa, resume_lsa) / (np.linalg.norm(ps_lsa) * np.linalg.norm(resume_lsa))
     similarities.append(similarity)
-    #get top 5 matches
+  #get top 5 matches
   res = (sorted(range(len(similarities)), key = lambda sub: similarities[sub])[-5:])
   res.reverse()
   student_names = []
@@ -123,14 +127,17 @@ def keyword_matching_through_cosine_similarity(project_text, resumes_csv='resume
     # project_keywords = extract_keywords(project_text_preprocessed)
     # Keyword Extraction
     doc = spacy_nlp(project_text)
+    # Extracting keywords using spacy
     keywords = [token.lemma_ for token in doc if token.is_alpha and not token.is_stop]
     project_text = ' '.join(keywords)
-
+    #Using TF-IDF vectorization
     vectorizer = TfidfVectorizer()
     resume_vectors = vectorizer.fit_transform(resumes_df['keywords'])
     project_vector = vectorizer.transform([project_text])
+    #cosine similarity
     similarity_scores = cosine_similarity(project_vector, resume_vectors)[0]
     resumes_df['Similarity'] = similarity_scores
+    # Returning top 5 resumes
     top_resume_indices = similarity_scores.argsort()[-5:][::-1]
     top_resumes = resumes_df.iloc[top_resume_indices]
     return top_resumes['CANDIDATE_NAME'].tolist()
@@ -166,6 +173,7 @@ def llama3_approach(project):
     candidate_scores = []
 
     for candidate_name, resume in resume_dict.items():
+        # Prompt template
         prompt = f"""
           You are an expert in evaluating resumes for specific projects. Your task is to assess the suitability of a candidate's resume for a given project based on the following criteria:
           **Skills**: Give the highest importance to skills relevant to the project domain.**Experience**: Consider the candidate's projects, internships, courses, and achievements in competitions, with extra weight if they have worked on similar projects before.
@@ -186,19 +194,15 @@ def llama3_approach(project):
           Score: [Score out of 100](should ONLY be a number, no fractions allowed) %
           Reason: [A brief summary of less than 30 words of the candidate's pros and cons for the project and the reason for the assigned score]
         """
-
         # Initialize the Ollama chat with streaming
         stream = ollama.chat(
-            model='llama2',
+            model='llama3',
             messages=[{'role': 'user', 'content': prompt}],
             stream=True,
         )
         full_output = ""
         for chunk in stream:
             full_output += chunk['message']['content']
-
-        print(full_output) # Comment out this line to hide output.
-
         # Extracting the score and name
         name_match = re.search(r"Candidate Name: (.+)", full_output)
         score_match = re.search(r"Score: (\d+)%", full_output)
@@ -207,12 +211,11 @@ def llama3_approach(project):
             name = name_match.group(1)
             score = int(score_match.group(1))
             candidate_scores.append((name, score))
-
     # Sort candidates by score in descending order
     candidate_scores.sort(key=lambda x: x[1], reverse=True)
-
-    # Return the top 5 candidates' names and scores
+    # Getting Top 5 candidates' names and scores
     top_5_candidates = candidate_scores[:5]
+    # Getting top 5 candidates' names
     top_5_names = [name for name, _ in top_5_candidates]
     return top_5_names
 
@@ -220,10 +223,13 @@ def gemini(input_pd):
     pd = preprocess_llm(input_pd)
     similarities = []
     for resume in resumes:
+        # Pre-processing
         text = preprocess_llm(resume)
-        # Prompt Template
+
+        # Using Gemini Flash
         model = genai.GenerativeModel('gemini-1.5-flash')
 
+        # Prompt Template
         input_prompt = f"""
         Hey Act Like a skilled or very experience ATS(Application Tracking System)
         with a deep understanding of tech field,software engineering,data science ,data analyst, big data engineer, consulting, finance, fintech, quant trading, web developer. Your task is to evaluate the resume based on the given project description.
@@ -257,12 +263,11 @@ def gemini(input_pd):
 
         response = get_gemini_repsonse(input_prompt, model)
         print(to_markdown(response.text))
+        # Extracting the score using regular expression
         pd_match = extract_pd_match(response.text)
         similarities.append(pd_match)
-
-        
-        # time.sleep(60/15)
-
+        time.sleep(60/15) #Due to the limit of 15 requests per minute.
+    # Getting top 5
     res = (sorted(range(len(similarities)), key=lambda sub: similarities[sub])[-5:])
     res.reverse()
     student_names = []
