@@ -62,7 +62,7 @@ def preprocess_text(text):
     text = re.sub(r'[^a-zA-Z\s]', '', text)
     return text
 
-# cs_model = Doc2Vec.load('cv_job_maching1.model')
+cs_model = Doc2Vec.load('cv_job_maching1.model')
 def cosine_similarity1(jd):
     input_JD = preprocess_text(jd)
     similarities = []
