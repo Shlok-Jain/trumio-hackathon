@@ -8,7 +8,7 @@ We have created a resume recommendation system that recommends resumes based upo
 5. Using Llama3 LLM
 
 We have implemented the server backend in flask. And frontend using HTML, CSS and JS.
-Exact details of the methods can be found in the report.
+Exact details of the methods can be found in the report - https://drive.google.com/file/d/1as0pF_5txAvwgKLPU1SfeNCwCsMog2TR/view.
 
 # Running the code locally
 
